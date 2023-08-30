@@ -160,6 +160,7 @@ public class NetworkManager : MonoBehaviour
                 try
                 {
                     LobbyStatusResDto changedPlayer = JsonConvert.DeserializeObject<LobbyStatusResDto>(dto);
+                    GameManager.Instance.GameRoom.Leader = changedPlayer.Leader;
                     GameManager.Instance.GameRoom.Players[changedPlayer.Idx] = changedPlayer.Player;
                     GameManager.Instance.Lobby.GameRoomDataChanged();
                 }

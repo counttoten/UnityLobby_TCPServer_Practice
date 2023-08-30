@@ -55,15 +55,6 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    private void LateUpdate()
-    {
-        if (initFlag)
-        {
-            // 아직도 초기화 안 된 경우 trigger 시킴..
-            GetDataFromServer();
-        }
-    }
-
     private void OnDestroy()
     {
         GameManager.Instance.Lobby = null;
@@ -84,65 +75,65 @@ public class LobbyManager : MonoBehaviour
 
     private void GetDataFromServer()
     {
-        room = GameManager.Instance.GameRoom;
-        Guid leaderGuid = Guid.Empty;
-        int lobbyPlayerCnt = 0;
-        for (int i = 0; i < MEMBERS; i++)
+        try
         {
-            try
+            room = GameManager.Instance.GameRoom;
+            int lobbyPlayerCnt = 0;
+            for (int i = 0; i < MEMBERS; i++)
             {
-                if (room.Players[i].PlayerId != Guid.Empty)
+                try
                 {
-                    lobbyPlayerCnt++;
-                    if (leaderGuid == Guid.Empty)
+                    if (room.Players[i].PlayerId != Guid.Empty)
                     {
-                        leaderGuid = room.Players[i].PlayerId;
-                        playerSlots[i].PlayerEnter(room.Players[i], true);
-                    }
-                    else playerSlots[i].PlayerEnter(room.Players[i], false);
+                        lobbyPlayerCnt++;
+                        playerSlots[i].PlayerEnter(room.Players[i], room.Players[i].PlayerId == room.Leader);
 
-                    if (room.Players[i].PlayerId == GameManager.Instance.PlayerId)
+                        if (room.Players[i].PlayerId == GameManager.Instance.PlayerId)
+                        {
+                            player = room.Players[i];
+                        }
+                    }
+                    else
                     {
-                        player = room.Players[i];
+                        playerSlots[i].PlayerLeave();
                     }
                 }
-                else
+                catch
                 {
                     playerSlots[i].PlayerLeave();
                 }
             }
-            catch
+            // set Canvas Text
+            // check if leader and change buttons and playerin(1) text
+            // if leader
+            if (GameManager.Instance.PlayerId == room.Leader)
             {
-                playerSlots[i].PlayerLeave();
+                bool canStart = room.CheckCanStart();
+                descriptionText.text = "START THE GAME WHEN ALL PLAYERS ARE READY";
+                statusBtnText.text = canStart ? "START" : "WAIT";
+                playerStatusBtn.SetButtonStatus(true, canStart);
+            }
+            else
+            {
+                descriptionText.text = "CLICK WAIT WHEN YOU ARE READY";
+                statusBtnText.text = player.IsReady ? "WAIT" : "READY";
+                playerStatusBtn.SetButtonStatus(false, player.IsReady);
+            }
+            playersCntText.text = $"PLAYERS: {lobbyPlayerCnt}/{MEMBERS}";
+
+            if (initFlag)
+            {
+                initFlag = false;
+
+                int i = Array.FindIndex(room.Players, p => p.PlayerId == GameManager.Instance.PlayerId) * ROTATION_DEGREE;
+                cam.transform.Rotate(0, i, 0);
+                myRotationDegree = (int)cam.transform.localRotation.eulerAngles.y;
+                Debug.Log(myRotationDegree);
             }
         }
-        // set Canvas Text
-        // check if leader and change buttons and playerin(1) text
-        // if leader
-        if (GameManager.Instance.PlayerId == leaderGuid)
+        catch 
         {
-            bool canStart = room.CheckCanStart();
-            descriptionText.text = "START THE GAME WHEN ALL PLAYERS ARE READY";
-            statusBtnText.text = canStart ? "START" : "WAIT";
-            playerStatusBtn.SetButtonStatus(true, canStart);
-        }
-        else
-        {
-            descriptionText.text = "CLICK WAIT WHEN YOU ARE READY";
-            statusBtnText.text = player.IsReady ? "WAIT" : "READY";
-            playerStatusBtn.SetButtonStatus(false, player.IsReady);
-        }
-        playersCntText.text = $"PLAYERS: {lobbyPlayerCnt}/{MEMBERS}";
-
-        if (initFlag)
-        {
-            initFlag = false;
-
-            GetDataFromServer();
-            int i = Array.FindIndex(room.Players, p => p.PlayerId == GameManager.Instance.PlayerId) * ROTATION_DEGREE;
-            cam.transform.Rotate(0, i, 0);
-            myRotationDegree = (int)cam.transform.localRotation.eulerAngles.y;
-            Debug.Log(myRotationDegree);
+            if (initFlag) GetDataFromServer();
         }
     }
 }

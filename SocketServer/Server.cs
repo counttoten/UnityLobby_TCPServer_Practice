@@ -181,6 +181,7 @@ namespace SocketServer
                 // 같은 게임룸에 있는 사람들에게 새로운 player의 입장을 알린다.
                 LobbyStatusResDto lobbyStatusResDto = new LobbyStatusResDto()
                 {
+                    Leader = room.Leader,
                     Player = mPlayer,
                     Idx = Array.FindIndex(room.Players, p => p != null && p.PlayerId == mPlayer.PlayerId),
                 };
@@ -210,6 +211,7 @@ namespace SocketServer
             room.Players[playerIdx].IsReady = status.IsReady;
             LobbyStatusResDto broadcastInfo = new LobbyStatusResDto()
             {
+                Leader = room.Leader,
                 Player = room.Players[playerIdx],
                 Idx = playerIdx,
             };
@@ -223,9 +225,11 @@ namespace SocketServer
             int deletedPlayer = mainGameServer.LeaveRoom(status.RoomId, status.PlayerId);
             // TODO: Null Error Handling
             if (deletedPlayer == -1) return;
+            MGameRoom room = mainGameServer.GetRoom(status.RoomId);
 
             LobbyStatusResDto broadcastInfo = new LobbyStatusResDto()
             {
+                Leader = room.Leader,
                 Idx = deletedPlayer,
             };
             SendStatusToPlayers(mainGameServer.GetRoom(status.RoomId).Players, broadcastInfo, SPacketType.B_P_LEAVE);

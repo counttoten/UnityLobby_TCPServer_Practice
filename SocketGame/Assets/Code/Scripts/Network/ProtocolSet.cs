@@ -68,6 +68,7 @@ public class LobbyStatusReqDto
 
 public class LobbyStatusResDto
 {
+    public Guid Leader { get; set; }
     public MPlayer Player { get; set; }
     public int Idx { get; set; }
 }

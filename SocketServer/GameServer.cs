@@ -49,7 +49,13 @@ namespace SocketServer
         {
             if (_rooms.ContainsKey(roomId))
             {
-                return _rooms[roomId].RemovePlayer(playerId);
+                int idx = _rooms[roomId].RemovePlayer(playerId);
+                if (_rooms[roomId].CountPlayers() == 0) 
+                {
+                    _rooms.Remove(roomId);
+                    return -1; 
+                }
+                return idx;
             }
             else
             {
