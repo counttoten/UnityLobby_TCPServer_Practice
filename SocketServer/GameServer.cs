@@ -33,16 +33,27 @@ namespace SocketServer
             }
         }
 
-        public void LeaveRoom(Guid roomId, Guid playerId)
+        public MGameRoom GetRoom(Guid roomId)
         {
             if (_rooms.ContainsKey(roomId))
             {
-                MGameRoom room = _rooms[roomId];
-                room.RemovePlayer(playerId);
+                return _rooms[roomId];
             }
             else
             {
-                Console.WriteLine("Room not found");
+                return null;
+            }
+        }
+
+        public int LeaveRoom(Guid roomId, Guid playerId)
+        {
+            if (_rooms.ContainsKey(roomId))
+            {
+                return _rooms[roomId].RemovePlayer(playerId);
+            }
+            else
+            {
+                return -1;
             }
         }
 

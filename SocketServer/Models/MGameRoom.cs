@@ -35,15 +35,16 @@ namespace SocketServer.Models
             }
         }
 
-        public void RemovePlayer(Guid playerId)
+        public int RemovePlayer(Guid playerId)
         {
-            int idx = Array.FindIndex(Players, p => p.PlayerId == playerId);
+            int idx = Array.FindIndex(Players, p => p != null && p.PlayerId == playerId);
             Players[idx] = null;
 
             if (Leader == playerId)
             {
                 FindNewLeader();
             }
+            return idx;
         }
         
         public int CountPlayers()

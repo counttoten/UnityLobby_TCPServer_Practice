@@ -60,23 +60,22 @@ namespace SocketServer
 
         private void SockAsync_DataReceived(object sender, SocketAsyncEventArgs e)
         {
-            Console.WriteLine("SomeDataFromSocket!");
             Socket client = (Socket)sender;
 
             if (client.Connected && e.BytesTransferred > 0)
             {
+                Console.WriteLine("Some Data From Client! ====================");
                 int length = e.BytesTransferred;
                 byte[] buffer = new byte[length];
                 Array.Copy(e.Buffer, buffer, length);
 
                 CPacketType route = (CPacketType)buffer[0];
-                Console.WriteLine("route: " + route.ToString());
+                Console.WriteLine("packet type: " + route.ToString());
                 byte[] data = null;
                 if (length > 0)
                 {
                     data = new byte[length - 1];
                     Array.Copy(buffer, 1, data, 0, length - 1);
-                    Console.WriteLine(Encoding.Default.GetString(data));
                 }
 
                 byte[] dtoSerialized = null;
@@ -95,10 +94,20 @@ namespace SocketServer
                         sendPacketType = SPacketType.C_ENTERLOBBY;
                         dtoSerialized = Game_JoinRoom(data, client);
                         break;
+                    case CPacketType.L_STATUS:
+                        Game_StatusChange(data);
+                        break;
+                    case CPacketType.L_LEAVE:
+                        Game_LeaveRoom(data);
+                        break;
+                    case CPacketType.L_START:
+                        Game_StartRoom(data);
+                        break;
                 }
 
                 if (dtoSerialized != null)
                 {
+                    Console.WriteLine($"response packet type: {sendPacketType}");
                     byte[] dataToSend = new byte[dtoSerialized.Length + 1];
                     dataToSend[0] = (byte)sendPacketType;
                     Array.Copy(dtoSerialized, 0, dataToSend, 1, dtoSerialized.Length);
@@ -129,7 +138,6 @@ namespace SocketServer
         private byte[] Game_RoomList()
         {
             string dtoSerialized = JsonSerializer.Serialize(mainGameServer.GetRooms());
-            Console.WriteLine(dtoSerialized);
             byte[] dtoToBytes = Encoding.UTF8.GetBytes(dtoSerialized);
             return dtoToBytes;
         }
@@ -174,7 +182,7 @@ namespace SocketServer
                 LobbyStatusResDto lobbyStatusResDto = new LobbyStatusResDto()
                 {
                     Player = mPlayer,
-                    Idx = Array.FindIndex(room.Players, p => p.PlayerId == mPlayer.PlayerId),
+                    Idx = Array.FindIndex(room.Players, p => p != null && p.PlayerId == mPlayer.PlayerId),
                 };
                 SendStatusToPlayers(room.Players, lobbyStatusResDto, SPacketType.B_P_ENTER);
             }
@@ -190,10 +198,55 @@ namespace SocketServer
             byte[] dtoToBytes = Encoding.UTF8.GetBytes(dtoSerialized);
             return dtoToBytes;
         }
+
+        private void Game_StatusChange(byte[] data)
+        {
+            LobbyStatusReqDto status = JsonSerializer.Deserialize<LobbyStatusReqDto>(data);
+            MGameRoom room = mainGameServer.GetRoom(status.RoomId);
+            // TODO: Null Error Handling
+            if (room == null) return;
+            int playerIdx = Array.FindIndex(room.Players, p => p != null && p.PlayerId == status.PlayerId);
+
+            room.Players[playerIdx].IsReady = status.IsReady;
+            LobbyStatusResDto broadcastInfo = new LobbyStatusResDto()
+            {
+                Player = room.Players[playerIdx],
+                Idx = playerIdx,
+            };
+
+            SendStatusToPlayers(room.Players, broadcastInfo, SPacketType.B_P_CHANGE);
+        }
+
+        private void Game_LeaveRoom(byte[] data)
+        {
+            LobbyStatusReqDto status = JsonSerializer.Deserialize<LobbyStatusReqDto>(data);
+            int deletedPlayer = mainGameServer.LeaveRoom(status.RoomId, status.PlayerId);
+            // TODO: Null Error Handling
+            if (deletedPlayer == -1) return;
+
+            LobbyStatusResDto broadcastInfo = new LobbyStatusResDto()
+            {
+                Idx = deletedPlayer,
+            };
+            SendStatusToPlayers(mainGameServer.GetRoom(status.RoomId).Players, broadcastInfo, SPacketType.B_P_LEAVE);
+        }
+
+        private void Game_StartRoom(byte[] data)
+        {
+            Guid roomId = Guid.Parse(Encoding.UTF8.GetString(data));
+            MGameRoom room = mainGameServer.GetRoom(roomId);
+            room.IsPlaying = true;
+            // TODO
+            // gameroom 전체 정보 보낼 수 있도록 수정..!
+            // 아니다 필드에 가서 game 정보를 받자...! 그게 낫지 않나..? 암튼 고민해보기..!
+            SendStatusToPlayers(room.Players, null, SPacketType.B_GAME_START);
+        }
+
         #endregion
 
         private void SendStatusToPlayers(MPlayer[] players, LobbyStatusResDto dto, SPacketType packetType)
         {
+            Console.WriteLine($"broadcast packet type: {packetType}");
             string dtoSerialized = JsonSerializer.Serialize(dto);
             byte[] dtoToBytes = Encoding.UTF8.GetBytes(dtoSerialized);
             byte[] dataToSend = new byte[dtoToBytes.Length + 1];
@@ -204,7 +257,14 @@ namespace SocketServer
             {
                 if (player != null && player.PlayerId != Guid.Empty)
                 {
-                    connectedClients[player.PlayerId].Send(dataToSend);
+                    try
+                    {
+                        connectedClients[player.PlayerId].Send(dataToSend);
+                    } 
+                    catch (SocketException noSocket)
+                    {
+                        Console.WriteLine(noSocket.Message);
+                    }
                 }
             }
         }

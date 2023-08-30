@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System;
 
 public class ModelSet { }
@@ -17,10 +16,11 @@ public class MGameRoom
         int cnt = 0;
         foreach (var player in Players)
         {
-            if (player.PlayerId != Guid.Empty)
+            if (player != null && player.PlayerId != Guid.Empty)
             {
                 cnt++;
-                if (!player.IsReady) return false;
+                // leader는 준비 안해도 됨.
+                if (!player.IsReady && player.PlayerId != Leader) return false;
             }
         }
         return cnt >= 4;

@@ -18,15 +18,15 @@ public class LobbyManager : MonoBehaviour
     private TMP_Text playersCntText;
     private TMP_Text descriptionText;
     private GameObject playerStatusBtnObj;
-    private Button playerStatusBtn;
+    private PlayerStatusBtn playerStatusBtn;
     private TMP_Text statusBtnText;
 
+    bool initFlag = true;
     bool getDataFromServerFlag = false;
+    int myRotationDegree = 0;
 
     private static readonly int MEMBERS = 10;
     private static readonly int ROTATION_DEGREE = 360 / MEMBERS;
-
-    private int myRotationDegree;
 
     void Start()
     {
@@ -40,13 +40,9 @@ public class LobbyManager : MonoBehaviour
         descriptionText = CanvasObj.transform.GetChild(3).GetComponent<TMP_Text>();
 
         playerStatusBtnObj = CanvasObj.transform.GetChild(4).gameObject;
-        playerStatusBtn = playerStatusBtnObj.GetComponent<Button>();
+        playerStatusBtn = playerStatusBtnObj.GetComponent<PlayerStatusBtn>();
         statusBtnText = playerStatusBtnObj.GetComponentInChildren<TMP_Text>();
 
-        GetDataFromServer();
-        int i = Array.FindIndex(room.Players, p => p.PlayerId == GameManager.Instance.PlayerId) * ROTATION_DEGREE;
-        cam.transform.Rotate(0, i , 0);
-        myRotationDegree = (int)cam.transform.rotation.y;
         getDataFromServerFlag = true;
     }
 
@@ -55,6 +51,15 @@ public class LobbyManager : MonoBehaviour
         if (getDataFromServerFlag)
         {
             getDataFromServerFlag = false;
+            GetDataFromServer();
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (initFlag)
+        {
+            // 아직도 초기화 안 된 경우 trigger 시킴..
             GetDataFromServer();
         }
     }
@@ -69,7 +74,7 @@ public class LobbyManager : MonoBehaviour
     public void RotateCamera(bool isLeft)
     {
         cam.transform.Rotate(isLeft ? leftTurn : rightTurn);
-        playerStatusBtnObj.SetActive((int)cam.transform.rotation.y == myRotationDegree);
+        playerStatusBtnObj.SetActive((int)cam.transform.localRotation.eulerAngles.y == myRotationDegree);
     }
 
     public void GameRoomDataChanged()
@@ -119,14 +124,25 @@ public class LobbyManager : MonoBehaviour
             bool canStart = room.CheckCanStart();
             descriptionText.text = "START THE GAME WHEN ALL PLAYERS ARE READY";
             statusBtnText.text = canStart ? "START" : "WAIT";
-            playerStatusBtn.enabled = canStart;
+            playerStatusBtn.SetButtonStatus(true, canStart);
         }
         else
         {
             descriptionText.text = "CLICK WAIT WHEN YOU ARE READY";
             statusBtnText.text = player.IsReady ? "WAIT" : "READY";
-            playerStatusBtn.enabled = true;
+            playerStatusBtn.SetButtonStatus(false, player.IsReady);
         }
         playersCntText.text = $"PLAYERS: {lobbyPlayerCnt}/{MEMBERS}";
+
+        if (initFlag)
+        {
+            initFlag = false;
+
+            GetDataFromServer();
+            int i = Array.FindIndex(room.Players, p => p.PlayerId == GameManager.Instance.PlayerId) * ROTATION_DEGREE;
+            cam.transform.Rotate(0, i, 0);
+            myRotationDegree = (int)cam.transform.localRotation.eulerAngles.y;
+            Debug.Log(myRotationDegree);
+        }
     }
 }

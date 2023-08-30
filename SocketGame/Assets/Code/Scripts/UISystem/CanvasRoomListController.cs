@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class CanvasRoomListController : MonoBehaviour
 {
@@ -16,7 +14,6 @@ public class CanvasRoomListController : MonoBehaviour
 
     public void OnEnable()
     {
-        Debug.Log("reqeust room list");
         RequestRoomListFromServer();
     }
 
@@ -30,7 +27,6 @@ public class CanvasRoomListController : MonoBehaviour
             {
                 NoRoomMessage.SetActive(true);
                 return;
-                // no rooms! why dont you make one?
             }
             NoRoomMessage.SetActive(false);
             int index = 0;
@@ -59,7 +55,7 @@ public class CanvasRoomListController : MonoBehaviour
         roomListUpdateFlag = true;
     }
 
-    private void RequestRoomListFromServer()
+    public void RequestRoomListFromServer()
     {
         GameManager.Instance.Network.roomListController = this;
         GameManager.Instance.Network.SendMessageToServer(CPacketType.I_ROOMLIST);

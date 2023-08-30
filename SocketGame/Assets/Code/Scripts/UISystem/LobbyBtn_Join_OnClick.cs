@@ -1,10 +1,6 @@
 using Newtonsoft.Json;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Text;
-using System.Threading;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -48,7 +44,6 @@ public class LobbyBtn_Join_OnClick : MonoBehaviour, IPointerEnterHandler
         }
         else
         {
-            Debug.Log(joinRoomId);
             JoinRoomReqDto joinRoomReqDto = new JoinRoomReqDto()
             {
                 RoomId = joinRoomId,

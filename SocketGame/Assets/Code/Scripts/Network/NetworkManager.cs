@@ -6,7 +6,6 @@ using UnityEngine;
 using System.Text;
 using System.Collections.Generic;
 using System.Collections;
-using UnityEditor.PackageManager;
 using Newtonsoft.Json;
 
 public class NetworkManager : MonoBehaviour
@@ -57,7 +56,6 @@ public class NetworkManager : MonoBehaviour
             }
 
             HandleReceivedData(packetType, data);
-
             serverSocket.ReceiveAsync(e);
         }
     }
@@ -81,7 +79,7 @@ public class NetworkManager : MonoBehaviour
         ReqAndResCallback reqAndResCallback = new()
         {
             data = dataToSend,
-            resSetFunc = async (result) =>
+            resSetFunc = (result) =>
             {
                 /*
                 if (result != null && result.MessageType == (int)ResponsePacketType.TOKEN_INVALID && _messageType != RequestPacketType.GET_USER)
@@ -127,6 +125,7 @@ public class NetworkManager : MonoBehaviour
 
     private void HandleReceivedData(SPacketType packetType, byte[] data)
     {
+        Debug.Log(packetType.ToString());
         string dto = Encoding.UTF8.GetString(data);
         switch (packetType)
         {
