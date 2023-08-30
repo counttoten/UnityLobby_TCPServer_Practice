@@ -13,6 +13,6 @@ namespace SocketServer.Protocol
         L_STATUS = 20,       // P -> B_P_CHANGE
         L_LEAVE = 21,       // A -> B_P_LEAVE
         L_START = 22,       // L -> B_GAME_START 
-        F_POSITION = 30,
+        F_MVE = 40,
     }
 }

@@ -12,5 +12,6 @@
         B_P_LEAVE = 22,     // GAMEROOM에 있는 플레이어들한테 플레이어가 나감을 알림
 
         B_GAME_START = 30,  // GAMEROOM에 있는 플레이어들한테 게임이 시작됨을 알림
+        B_MVE = 40,
     }
 }

@@ -166,8 +166,15 @@ public class NetworkManager : MonoBehaviour
                 }
                 catch { }
                 break;
+            case SPacketType.B_GAME_START:
+                MGameRoom syncGameRoom = JsonConvert.DeserializeObject<MGameRoom>(dto);
+                GameManager.Instance.GameRoom = syncGameRoom;
+                GameManager.Instance.ChangeScene(GameState.IN_FIELD);
+                break;
+            case SPacketType.B_MVE:
+
+                break;
         }
     }
-
 #endregion
 }

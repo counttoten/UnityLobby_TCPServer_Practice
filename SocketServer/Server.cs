@@ -78,21 +78,17 @@ namespace SocketServer
                     Array.Copy(buffer, 1, data, 0, length - 1);
                 }
 
-                byte[] dtoSerialized = null;
-                SPacketType sendPacketType = SPacketType.C_;
+                // MIGHTDO: Dictionary 도입 고려!
                 switch (route)
                 {
                     case CPacketType.I_ROOMLIST:
-                        sendPacketType = SPacketType.C_ROOMLIST;
-                        dtoSerialized = Game_RoomList();
+                        Game_RoomList(client);
                         break;
                     case CPacketType.I_CREATEROOM:
-                        sendPacketType = SPacketType.C_ENTERLOBBY;
-                        dtoSerialized = Game_CreateRoom(data, client);
+                        Game_CreateRoom(data, client);
                         break;
                     case CPacketType.I_JOINROOM:
-                        sendPacketType = SPacketType.C_ENTERLOBBY;
-                        dtoSerialized = Game_JoinRoom(data, client);
+                        Game_JoinRoom(data, client);
                         break;
                     case CPacketType.L_STATUS:
                         Game_StatusChange(data);
@@ -103,15 +99,9 @@ namespace SocketServer
                     case CPacketType.L_START:
                         Game_StartRoom(data);
                         break;
-                }
-
-                if (dtoSerialized != null)
-                {
-                    Console.WriteLine($"response packet type: {sendPacketType}");
-                    byte[] dataToSend = new byte[dtoSerialized.Length + 1];
-                    dataToSend[0] = (byte)sendPacketType;
-                    Array.Copy(dtoSerialized, 0, dataToSend, 1, dtoSerialized.Length);
-                    client.Send(dataToSend);
+                    case CPacketType.F_MVE:
+                        Game_PlayerMove(data);
+                        break;
                 }
 
                 client.ReceiveAsync(e);
@@ -135,14 +125,13 @@ namespace SocketServer
 
         #region Game Logics
         // CPacketType.I_ROOMLIST
-        private byte[] Game_RoomList()
+        private void Game_RoomList(Socket client)
         {
-            string dtoSerialized = JsonSerializer.Serialize(mainGameServer.GetRooms());
-            byte[] dtoToBytes = Encoding.UTF8.GetBytes(dtoSerialized);
-            return dtoToBytes;
+            byte[] dataToSend = SerializeData(mainGameServer.GetRooms(), SPacketType.C_ROOMLIST);
+            client.Send(dataToSend);
         }
         // CPacketType.I_CREATEROOM
-        private byte[] Game_CreateRoom(byte[] data, Socket client)
+        private void Game_CreateRoom(byte[] data, Socket client)
         {
             CreateRoomReqDto newRoom = JsonSerializer.Deserialize<CreateRoomReqDto>(data);
             MGameRoom room = mainGameServer.CreateRoom(newRoom.RoomNm);
@@ -156,13 +145,12 @@ namespace SocketServer
                 PlayerId = mPlayer.PlayerId,
                 Room = room
             };
-            string dtoSerialized = JsonSerializer.Serialize(lobbyResDto);
-            byte[] dtoToBytes = Encoding.UTF8.GetBytes(dtoSerialized);
-            return dtoToBytes;
+            byte[] dataToSend = SerializeData(lobbyResDto, SPacketType.C_ENTERLOBBY);
+            client.Send(dataToSend);
         }
 
         // CPacketType.I_JOINROOM
-        private byte[] Game_JoinRoom(byte[] data, Socket client)
+        private void Game_JoinRoom(byte[] data, Socket client)
         {
             JoinRoomReqDto joinRoom = JsonSerializer.Deserialize<JoinRoomReqDto>(data);
 
@@ -185,7 +173,7 @@ namespace SocketServer
                     Player = mPlayer,
                     Idx = Array.FindIndex(room.Players, p => p != null && p.PlayerId == mPlayer.PlayerId),
                 };
-                SendStatusToPlayers(room.Players, lobbyStatusResDto, SPacketType.B_P_ENTER);
+                BroadcastToPlayers(room.Players, SerializeData(lobbyStatusResDto, SPacketType.B_P_ENTER));
             }
             else
             {
@@ -195,9 +183,8 @@ namespace SocketServer
                     Room = room
                 };
             }
-            string dtoSerialized = JsonSerializer.Serialize(lobbyResDto);
-            byte[] dtoToBytes = Encoding.UTF8.GetBytes(dtoSerialized);
-            return dtoToBytes;
+            byte[] dataToSend = SerializeData(lobbyResDto, SPacketType.C_ENTERLOBBY);
+            client.Send(dataToSend);
         }
 
         private void Game_StatusChange(byte[] data)
@@ -215,8 +202,7 @@ namespace SocketServer
                 Player = room.Players[playerIdx],
                 Idx = playerIdx,
             };
-
-            SendStatusToPlayers(room.Players, broadcastInfo, SPacketType.B_P_CHANGE);
+            BroadcastToPlayers(room.Players, SerializeData(broadcastInfo, SPacketType.B_P_CHANGE));
         }
 
         private void Game_LeaveRoom(byte[] data)
@@ -232,7 +218,7 @@ namespace SocketServer
                 Leader = room.Leader,
                 Idx = deletedPlayer,
             };
-            SendStatusToPlayers(mainGameServer.GetRoom(status.RoomId).Players, broadcastInfo, SPacketType.B_P_LEAVE);
+            BroadcastToPlayers(room.Players, SerializeData(broadcastInfo, SPacketType.B_P_LEAVE));
         }
 
         private void Game_StartRoom(byte[] data)
@@ -240,30 +226,36 @@ namespace SocketServer
             Guid roomId = Guid.Parse(Encoding.UTF8.GetString(data));
             MGameRoom room = mainGameServer.GetRoom(roomId);
             room.IsPlaying = true;
-            // TODO
-            // gameroom 전체 정보 보낼 수 있도록 수정..!
-            // 아니다 필드에 가서 game 정보를 받자...! 그게 낫지 않나..? 암튼 고민해보기..!
-            SendStatusToPlayers(room.Players, null, SPacketType.B_GAME_START);
+
+            BroadcastToPlayers(room.Players, SerializeData(room, SPacketType.B_GAME_START));
+        }
+
+        private void Game_PlayerMove(byte[] data)
+        {
+            FieldReqDto playerPos = JsonSerializer.Deserialize<FieldReqDto>(data);
+            MGameRoom room = mainGameServer.GetRoom(playerPos.Room);
+            int playerIdx = Array.FindIndex(room.Players, p => p != null && p.PlayerId == playerPos.Player);
+
+            FieldResDto broadcastInfo = new FieldResDto()
+            {
+                Idx = playerIdx,
+                Pos = playerPos.Pos,
+            };
+            BroadcastToPlayers(room.Players, SerializeData(broadcastInfo, SPacketType.B_MVE));
         }
 
         #endregion
 
-        private void SendStatusToPlayers(MPlayer[] players, LobbyStatusResDto dto, SPacketType packetType)
+        private void BroadcastToPlayers(MPlayer[] players, byte[] data)
         {
-            Console.WriteLine($"broadcast packet type: {packetType}");
-            string dtoSerialized = JsonSerializer.Serialize(dto);
-            byte[] dtoToBytes = Encoding.UTF8.GetBytes(dtoSerialized);
-            byte[] dataToSend = new byte[dtoToBytes.Length + 1];
-            dataToSend[0] = (byte)packetType;
-            Array.Copy(dtoToBytes, 0, dataToSend, 1, dtoToBytes.Length);
-            
+            Console.WriteLine("broadcast packet!");
             foreach (MPlayer player in players)
             {
                 if (player != null && player.PlayerId != Guid.Empty)
                 {
                     try
                     {
-                        connectedClients[player.PlayerId].Send(dataToSend);
+                        connectedClients[player.PlayerId].Send(data);
                     } 
                     catch (SocketException noSocket)
                     {
@@ -271,6 +263,16 @@ namespace SocketServer
                     }
                 }
             }
+        }
+
+        private static byte[] SerializeData(object dto, SPacketType packetType)
+        {
+            string dtoSerialized = JsonSerializer.Serialize(dto);
+            byte[] dtoToBytes = Encoding.UTF8.GetBytes(dtoSerialized);
+            byte[] dataToSend = new byte[dtoToBytes.Length + 1];
+            dataToSend[0] = (byte)packetType;
+            Array.Copy(dtoToBytes, 0, dataToSend, 1, dtoToBytes.Length);
+            return dataToSend;
         }
     }
 }

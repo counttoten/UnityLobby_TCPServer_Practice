@@ -14,7 +14,7 @@ public enum CPacketType
     L_STATUS = 20,       // P -> B_P_CHANGE
     L_LEAVE = 21,       // A -> B_P_LEAVE
     L_START = 22,       // L -> B_GAME_START 
-    F_POSITION = 30,
+    F_MVE = 40,
 }
 
 public enum SPacketType
@@ -29,6 +29,7 @@ public enum SPacketType
     B_P_LEAVE = 22,     // GAMEROOM에 있는 플레이어들한테 플레이어가 나감을 알림
 
     B_GAME_START = 30,  // GAMEROOM에 있는 플레이어들한테 게임이 시작됨을 알림
+    B_MVE = 40,
 }
 
 // DTOs ===============================================

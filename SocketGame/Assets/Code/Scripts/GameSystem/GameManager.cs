@@ -7,6 +7,7 @@ public class GameManager : MonoSingleton<GameManager>
 {
     public NetworkManager Network;
     public LobbyManager Lobby;
+    public FieldManager Field;
 
     public GameState gameState = GameState.LOADING;
 

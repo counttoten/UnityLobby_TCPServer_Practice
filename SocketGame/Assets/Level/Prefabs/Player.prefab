@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1782904336529182055}
   - component: {fileID: 3952586560515097299}
   - component: {fileID: 1304801403927452327}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Text (TMP)_leader
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -146,7 +146,7 @@ GameObject:
   - component: {fileID: 1194056849533265465}
   - component: {fileID: 7601146635105472593}
   - component: {fileID: 1057946747620235188}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Text (TMP)_name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -282,7 +282,7 @@ GameObject:
   - component: {fileID: 4851668604120835363}
   - component: {fileID: 82720817600456129}
   - component: {fileID: 5989380959879272898}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -386,7 +386,7 @@ GameObject:
   - component: {fileID: 8167774751506283423}
   - component: {fileID: 731567300905775886}
   - component: {fileID: 3800974903670055106}
-  m_Layer: 5
+  m_Layer: 3
   m_Name: Text (TMP)_status
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -523,9 +523,10 @@ GameObject:
   - component: {fileID: 4129126723191185565}
   - component: {fileID: 7309421216280971770}
   - component: {fileID: 2905282226399001037}
+  - component: {fileID: 5916524609667961794}
   - component: {fileID: 4488521848966987318}
   - component: {fileID: 2360846263592621204}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -621,6 +622,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dfbad22c4a722da4ea218cfbb027086e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5916524609667961794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8923940525729281365}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a55c0df968c7f6f49b0ebcb02dbf828e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!54 &4488521848966987318
