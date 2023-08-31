@@ -5,11 +5,13 @@ using UnityEngine;
 
 public class CanvasAlertPanelController : MonoBehaviour
 {
+    public TMP_Text AlertTitle;
     public TMP_Text AlertMsg;
 
-    public void OpenAlertPanel(string message)
+    public void OpenAlertPanel(string _title, string _message)
     {
         gameObject.SetActive(true);
-        AlertMsg.text = message;
+        AlertTitle.text = _title;
+        AlertMsg.text = _message;
     }
 }

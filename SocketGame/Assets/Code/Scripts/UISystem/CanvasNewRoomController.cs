@@ -31,7 +31,7 @@ public class CanvasNewRoomController : MonoBehaviour
     {
         if (processing) 
         {
-            panelController.OpenAlertPanel("Waiting for Server to create a new room... Please Wait!");
+            panelController.OpenAlertPanel("PLEASE WAIT", "Waiting for Server to create a new room... Please Wait!");
             return; 
         }
 
@@ -41,13 +41,13 @@ public class CanvasNewRoomController : MonoBehaviour
         string wantedRoomName = input.text.Trim();
         if (wantedRoomName.Length < 2 )
         {
-            panelController.OpenAlertPanel("The name of the room is too SHORT. Make its length longer than 2.");
+            panelController.OpenAlertPanel("ERROR OCCUR", "The name of the room is too SHORT. Make its length longer than 2.");
             OpenLoadingCanvas(false);
             return;
         }
         else if (wantedRoomName.Length > 20 )
         {
-            panelController.OpenAlertPanel("The name of the room is too LONG. Make its length shorter than 20.");
+            panelController.OpenAlertPanel("ERROR OCCUR", "The name of the room is too LONG. Make its length shorter than 20.");
             OpenLoadingCanvas(false);
             return;
         }
@@ -71,7 +71,7 @@ public class CanvasNewRoomController : MonoBehaviour
             if (lobbyRes.PlayerId == null)
             {
                 OpenLoadingCanvas(false);
-                panelController.OpenAlertPanel("Failed to create a new server...");
+                panelController.OpenAlertPanel("ERROR OCCUR", "Failed to create a new server...");
                 return;
             }
 

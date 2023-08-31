@@ -2,6 +2,7 @@
 using SocketServer.Protocol.DTOs;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SocketServer
 {
@@ -89,6 +90,21 @@ namespace SocketServer
                 res.Add(roomListDto);
             }
             return res;
+        }
+
+        public Guid FindJoiningRoom(Guid _player)
+        {
+            foreach (var room in _rooms.Values)
+            {
+                foreach (var player in room.Players)
+                {
+                    if (player.PlayerId == _player)
+                    {
+                        return room.RoomId;
+                    }
+                }
+            }
+            return Guid.Empty;
         }
     }
 }

@@ -3,6 +3,7 @@ using SocketServer.Protocol;
 using SocketServer.Protocol.DTOs;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -105,6 +106,25 @@ namespace SocketServer
                 }
 
                 client.ReceiveAsync(e);
+            }
+            else
+            {
+                Console.WriteLine("CONNECTION BROKE");
+                if (connectedClients.ContainsValue(client))
+                {
+                    Guid player = connectedClients.First(c => c.Value == client).Key;
+                    Guid room = mainGameServer.FindJoiningRoom(player);
+                    LobbyStatusReqDto playerLeave = new LobbyStatusReqDto()
+                    {
+                        RoomId = room,
+                        PlayerId = player,
+                    };
+                    string serialized = JsonSerializer.Serialize(playerLeave);
+                    Game_LeaveRoom(Encoding.UTF8.GetBytes(serialized));
+                    connectedClients.Remove(player);
+                }
+                client.Close();
+                client.Dispose();
             }
         }
 

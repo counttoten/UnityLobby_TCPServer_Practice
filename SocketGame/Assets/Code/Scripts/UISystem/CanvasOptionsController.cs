@@ -26,7 +26,7 @@ public class CanvasOptionsController : MonoBehaviour
     {
         if (processing) 
         {
-            panelController.OpenAlertPanel("Saving username... Please wait!");
+            panelController.OpenAlertPanel("PLEASE WAIT", "Saving username... Please wait!");
             return; 
         }
 
@@ -36,13 +36,13 @@ public class CanvasOptionsController : MonoBehaviour
         string wantedUserName = input.text.Trim();
         if (wantedUserName.Length < 2 )
         {
-            panelController.OpenAlertPanel("Username is too SHORT. Make its length longer than 2.");
+            panelController.OpenAlertPanel("ERROR OCCUR", "Username is too SHORT. Make its length longer than 2.");
             processing = false;
             return;
         }
         else if (wantedUserName.Length > 20 )
         {
-            panelController.OpenAlertPanel("Username is too LONG. Make its length shorter than 20.");
+            panelController.OpenAlertPanel("ERROR OCCUR", "Username is too LONG. Make its length shorter than 20.");
             processing = false;
             return;
         }
@@ -50,6 +50,7 @@ public class CanvasOptionsController : MonoBehaviour
         // 2. save to player pref
         PlayerPrefs.SetString(DataManager.PlayerPrefKey, wantedUserName);
         DataManager.PlayerName = wantedUserName;
+        panelController.OpenAlertPanel("SUCCESS", "User name is Saved!");
         processing = false;
     }
 }

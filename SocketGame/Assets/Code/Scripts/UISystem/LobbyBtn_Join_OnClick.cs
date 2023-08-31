@@ -31,7 +31,7 @@ public class LobbyBtn_Join_OnClick : MonoBehaviour, IPointerEnterHandler
         {
             waitEndFlag = false;
             LoadingPanel.SetActive(false);
-            panelController.OpenAlertPanel("Failed to join the room...");
+            panelController.OpenAlertPanel("ERROR OCCUR", "Failed to join the room...");
         }
     }
 
@@ -40,7 +40,7 @@ public class LobbyBtn_Join_OnClick : MonoBehaviour, IPointerEnterHandler
     {
         if (joinRoomId == Guid.Empty)
         {
-            panelController.OpenAlertPanel("No Selected Room!");
+            panelController.OpenAlertPanel("ERROR OCCUR", "No Selected Room!");
         }
         else
         {
